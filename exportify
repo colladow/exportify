@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+from optparse import OptionParser
+import sys
+import os
+
+def main():
+	usage = 'usage: %s [options] input_file [output_file]' % sys.argv[0]
+	parser = OptionParser(usage=usage)
+
+	parser.add_option('-l', '--list', action='store_true', dest='list',
+										help='list the objects that will be exported')
+	parser.add_option('-j', '--jsctagspath', action='store', dest='jsctags_path',
+										help='specify the location of the jsctags.js file, defaults to ./jsctags/bin/jsctags.js')
+
+	opts, args = parser.parse_args()
+
+	if (not opts.list and len(args) < 2) or (opts.list and len(args) < 1):
+		parser.print_help()
+		sys.exit(1)
+
+	try:
+		input = open(args[0])
+	except:
+		print 'Could not open the input file.'
+		sys.exit(1)
+
+	jsctags_path = 'jsctags/bin/jsctags.js'
+
+	if opts.jsctags_path:
+		jsctags_path = opts.jsctags_path
+
+	objects = collect_objects(input, jsctags_path)
+
+	if opts.list:
+		print 'Objects to be exported:'
+		for o in objects: print o
+		sys.exit(0)
+	else:
+		try:
+			output = open(args[1], 'w')
+		except:
+			print 'Could not open the output file.'
+			sys.exit(1)
+
+		exportify(objects, input, output)
+
+def collect_objects(input, jsctags_path):
+	os.system('node %s -o tags %s' % (jsctags_path, input.name))
+
+	tags = open('tags')
+	objects = []
+
+	for line in tags:
+		if line.find('namespace:') == -1 and line.find('mootools-core.js') > -1:
+			objects.append(JSObject.obj_from_line(line))
+
+	tags.close()
+	os.remove('tags')
+
+	return objects
+
+def exportify(objects, input, output):
+	# copy the input over
+	output.write(input.read())
+	output.write('\n')
+
+	outlines = []
+	for object in objects:
+		outlines.append('exports.%s = %s;\n' % (object.name, object.name))
+
+	output.writelines(outlines)
+
+	input.close()
+	output.close()
+
+class JSObject:
+	def __init__(self, name):
+		self.name = name
+
+	@classmethod
+	def obj_from_line(cls, line):
+		name = line[:line.find('\t')]
+
+		return cls(name)
+
+	def __str__(self):
+		return self.name
+
+if __name__ == '__main__':
+	main()
+
