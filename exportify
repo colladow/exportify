@@ -11,6 +11,8 @@ def main():
 										help='list the objects that will be exported')
 	parser.add_option('-j', '--jsctagspath', action='store', dest='jsctags_path',
 										help='specify the location of the jsctags.js file, defaults to ./jsctags/bin/jsctags.js')
+	parser.add_option('-o', '--objects', action='store', dest='object_list',
+										help='provide a comma separated list of objects to export and ignore jsctags')
 
 	opts, args = parser.parse_args()
 
@@ -24,17 +26,28 @@ def main():
 		print 'Could not open the input file.'
 		sys.exit(1)
 
-	jsctags_path = 'jsctags/bin/jsctags.js'
+	# default jsctags path is assumed to be on your PATH
+	jsctags_path = 'jsctags.js'
 
 	if opts.jsctags_path:
 		jsctags_path = opts.jsctags_path
 
-	objects = collect_objects(input, jsctags_path)
+	objects = []
+	if opts.object_list:
+		try:
+			# parse out the objects form the command line
+			for object in opts.object_list.split(','):
+				objects.append(JSObject(object.strip()))
+		except:
+			print 'Your object list is in the wrong format.'
+			sys.exit(1)
+	else:
+		# parse the objects from the generated tags file
+		objects = collect_objects(input, jsctags_path)
 
 	if opts.list:
 		print 'Objects to be exported:'
 		for o in objects: print o
-		sys.exit(0)
 	else:
 		try:
 			output = open(args[1], 'w')
@@ -45,13 +58,20 @@ def main():
 		exportify(objects, input, output)
 
 def collect_objects(input, jsctags_path):
-	os.system('node %s -o tags %s' % (jsctags_path, input.name))
+	# generate the tags file in the cwd
+	os.system('%s -o tags %s' % (jsctags_path, input.name))
 
-	tags = open('tags')
+	try:
+		tags = open('tags')
+	except IOError:
+		print 'Tags file was not generated properly. Please make sure jsctags.js is on the path, or provide its location with -j.'
+		sys.exit(1)
+
 	objects = []
 
 	for line in tags:
-		if line.find('namespace:') == -1 and line.find('mootools-core.js') > -1:
+		# grab 'top level' objects (objects with no namespace)
+		if line.find('namespace:') == -1 and line.find(input.name) > -1:
 			objects.append(JSObject.obj_from_line(line))
 
 	tags.close()
@@ -64,6 +84,7 @@ def exportify(objects, input, output):
 	output.write(input.read())
 	output.write('\n')
 
+	# add the export lines
 	outlines = []
 	for object in objects:
 		outlines.append('exports.%s = %s;\n' % (object.name, object.name))
