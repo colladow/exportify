@@ -1,0 +1,60 @@
+Exportify is a small utility for creating CommonJS modules from pre-existing javascript modules.
+
+Help Text:
+------------------------------------------------------------------------------------------------
+Usage: ./exportify [options] input_file [output_file]
+
+Options:
+  -h, --help            show this help message and exit
+  -l, --list            list the objects that will be exported
+  -j JSCTAGS_PATH, --jsctagspath=JSCTAGS_PATH
+                        specify the location of the jsctags.js file, defaults
+                        to ./jsctags/bin/jsctags.js
+
+Description:
+------------------------------------------------------------------------------------------------
+Exportify has 2 requirements:
+	node			(http://nodejs.org)
+	jsctags		(http://github.com/pcwalton/jsctags)
+
+Exportify works by first generating a vim tagset using jsctags, which is essentially a list of
+objects in a JavaScript file. It then pulls out only the top level objects (any object in the
+file's global namespace). With this list of objects, it copies your original js file to a 
+target file, and appends a list of statements to export the top level objects.
+
+
+Example:
+------------------------------------------------------------------------------------------------
+
+	Original JS File (mymodule-orig.js):
+	====================================
+	var Foo = {
+		bar: 'baz'
+	};
+
+	function hello(){
+		return 'Hello, world!';
+	}
+
+	Target JS File (mymodule.js):
+	=============================
+	var Foo = {
+		bar: 'baz'
+	};
+
+	function hello(){
+		return 'Hello, world!';
+	}
+
+	exports.Foo = Foo;
+	exports.hello = hello;
+
+This allows you to do the following in node:
+
+	Node JS File (myscript.js):
+	===========================
+	require('./mymodule');
+	require('sys');
+
+	sys.puts(mymodule.hello());	// prints 'Hello, world!'
+
