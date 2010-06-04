@@ -10,7 +10,7 @@ def main():
 	parser.add_option('-l', '--list', action='store_true', dest='list',
 										help='list the objects that will be exported')
 	parser.add_option('-j', '--jsctagspath', action='store', dest='jsctags_path',
-										help='specify the location of the jsctags.js file, defaults to ./jsctags/bin/jsctags.js')
+										help='specify the location of the jsctags.js file, defaults to jsctags.js and assumes it is on the path')
 	parser.add_option('-o', '--objects', action='store', dest='object_list',
 										help='provide a comma separated list of objects to export and ignore jsctags')
 

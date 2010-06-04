@@ -9,24 +9,24 @@ Options:
   -l, --list            list the objects that will be exported
   -j JSCTAGS_PATH, --jsctagspath=JSCTAGS_PATH
                         specify the location of the jsctags.js file, defaults
-                        to ./jsctags/bin/jsctags.js
+                        to jsctags.js and assumes it is on the path
   -o OBJECT_LIST, --objects=OBJECT_LIST
                         provide a comma separated list of objects to export
                         and ignore jsctags
 
 Description:
 ------------------------------------------------------------------------------------------------
-Exportify has 2 requirements:
-	node			(http://nodejs.org)
-	jsctags		(http://github.com/pcwalton/jsctags)
-
 Exportify works by first generating a vim tagset using jsctags, which is essentially a list of
 objects in a JavaScript file. It then pulls out only the top level objects (any object in the
 file's global namespace). With this list of objects, it copies your original js file to a 
 target file, and appends a list of statements to export the top level objects.
 
-You can also use exportify without jsctags by provided a comma-separated list of object names
-to export by providing the -o switch with the list.
+Using exportify with jsctags has 2 requirements:
+	node			(http://nodejs.org)
+	jsctags		(http://github.com/pcwalton/jsctags)
+
+You can also use exportify without jsctags by providing a comma-separated list of object names
+to export using the -o switch.
 
 
 Example:
